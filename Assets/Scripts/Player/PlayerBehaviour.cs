@@ -72,8 +72,17 @@ public class PlayerBehaviour : MonoBehaviour
         move.Disable();
         jump.Disable();
         attack.Disable();
+
     }
 
+    void HandleDeath()
+    {
+        // TODO: disable movement
+        // TODO: add OnRespawn() method to gameManager?
+        // TODO: disable sprite renderer
+        // TODO: remove collider
+        // TODO: stop adding frames to recorder
+    }
 
     // Start is called before the first frame update
     void Start()

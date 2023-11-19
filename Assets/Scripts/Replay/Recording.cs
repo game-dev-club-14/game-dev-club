@@ -7,6 +7,7 @@ public class Recording
     public ReplayObject replayObject { get; private set; }
     private Queue<ReplayData> originalQueue; // reference to entire recording
     private Queue<ReplayData> replayQueue; // used concurrently
+    // [SerializeField] private Transform recordingStorage;
 
     public Recording(Queue<ReplayData> recordingQueue)
     {
@@ -36,12 +37,14 @@ public class Recording
         return hasMoreFrames;
     }
 
-    public void InstantiateReplayObject(GameObject replayObjectPrefab)
+    public void InstantiateReplayObject(GameObject replayObjectPrefab, GameObject parent)
     {
         if (replayQueue.Count != 0)
         {
             ReplayData startingData = replayQueue.Peek();
-            replayObject = Object.Instantiate(replayObjectPrefab, startingData.position, Quaternion.identity).GetComponent<ReplayObject>();
+            replayObject = Object.Instantiate(replayObjectPrefab, startingData.position, Quaternion.identity)
+                .GetComponent<ReplayObject>();
+            replayObject.gameObject.transform.parent = parent.transform;
         }
     }
 

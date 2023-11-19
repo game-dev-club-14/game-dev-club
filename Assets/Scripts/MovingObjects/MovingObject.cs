@@ -8,11 +8,11 @@ public class MovingObject : MonoBehaviour
     public float speed = 3f;
 
     [Header("Waypoints")]
-    public GameObject waypointsParent;
+    // public GameObject waypointsParent;
 
-    private LinkedList<Transform> waypointsLinkedList;
+    private LinkedList<Vector3> waypointsLinkedList;
 
-    private LinkedListNode<Transform> targetNode;
+    private LinkedListNode<Vector3> targetNode;
 
     private SpriteRenderer sr;
 
@@ -21,8 +21,9 @@ public class MovingObject : MonoBehaviour
     private void Awake()
     {
         InitializeWaypoints();
-        if (waypointsParent != null)
+        // if (waypointsParent != null)
             targetNode = waypointsLinkedList.First;
+        Debug.Log("targetNode = " + targetNode.Value);
         sr = GetComponent<SpriteRenderer>();
         recorder = GetComponent<Recorder>();
     }
@@ -60,11 +61,13 @@ public class MovingObject : MonoBehaviour
 
     private void Update()
     {
-        if (waypointsParent != null)
-        {
-            // calculate the move distance for this frame
-            Vector3 newPosition = Vector3.MoveTowards(transform.position, targetNode.Value.position, speed * Time.deltaTime);
-            float distanceFromWaypoint = (newPosition - targetNode.Value.position).magnitude;
+        // if (waypointsParent != null)
+        // {
+        // calculate the move distance for this frame
+        Debug.Log("frame number: " + Time.frameCount);
+        Vector3 newPosition = Vector3.MoveTowards(transform.position, targetNode.Value, speed * Time.deltaTime);
+            
+            float distanceFromWaypoint = (newPosition - targetNode.Value).magnitude;
             if (distanceFromWaypoint <= 0.1f)
             {
                 StartCoroutine(IdleRoutine(2.0f));
@@ -72,7 +75,7 @@ public class MovingObject : MonoBehaviour
             }
             // move
             this.transform.position = newPosition;
-        }
+        // }
     }
 
     private void LateUpdate()
@@ -81,7 +84,7 @@ public class MovingObject : MonoBehaviour
         recorder.RecordReplayFrame(data);
     }
 
-    private LinkedListNode<Transform> FindNextNodeCircular()
+    private LinkedListNode<Vector3> FindNextNodeCircular()
     {
         return targetNode.Next ?? targetNode.List.First;
     }
@@ -98,21 +101,21 @@ public class MovingObject : MonoBehaviour
 
     private void InitializeWaypoints()
     {
-        if (waypointsParent != null)
-        {
-            Transform[] possibleWaypoints = waypointsParent.gameObject.GetComponentsInChildren<Transform>();
-            // Transform[] possibleWaypoints = GetComponentsInChildren<Transform>();
-            List<Transform> waypoints = new List<Transform>();
+        // if (waypointsParent != null)
+        // {
+            // Transform[] possibleWaypoints = waypointsParent.gameObject.GetComponentsInChildren<Transform>();
+            Transform[] possibleWaypoints = GetComponentsInChildren<Transform>();
+            List<Vector3> waypoints = new List<Vector3>();
 
             foreach (Transform possibleWaypoint in possibleWaypoints)
             {
                 // only add child objects tagged with "Waypoint"
                 if (possibleWaypoint != transform && possibleWaypoint.gameObject.tag.Equals("Waypoint"))
                 {
-                    waypoints.Add(possibleWaypoint);
+                    waypoints.Add(possibleWaypoint.transform.position);
                 }
             }
-            waypointsLinkedList = new LinkedList<Transform>(waypoints);
-        }
+            waypointsLinkedList = new LinkedList<Vector3>(waypoints);
+        // }
     }
 }

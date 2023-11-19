@@ -37,6 +37,11 @@ public class GameEventsManager : MonoBehaviour
     public void PlayerRespawn()
     {
         onPlayerRespawn?.Invoke();
+
+        // TODO: destroy and then immediately spawn a new player
+        // save the values in the recorder script to a data
     }
+
+
 
 }

@@ -9,6 +9,7 @@ public class Recorder : MonoBehaviour
     public Queue<ReplayData> recordingQueue {  get; private set; }
     private bool isDoingReplay = false;
     private Recording recording;
+    [SerializeField] private GameObject replayObjects;
 
     private void Awake()
     {
@@ -20,6 +21,7 @@ public class Recorder : MonoBehaviour
         // subscribe to events; these will automatically be called upon game manager events.
         GameEventsManager.current.onGoalReached += OnGoalReached;
         GameEventsManager.current.onRestartLevel += OnRestartLevel;
+        replayObjects = GameObject.FindGameObjectWithTag("ReplayStorage");
     }
 
     private void OnDestroy()
@@ -69,7 +71,7 @@ public class Recorder : MonoBehaviour
         // reset the current recording queue for next time
         recordingQueue.Clear();
         // insitantiate replay object in the scene
-        recording.InstantiateReplayObject(replayObjectPrefab);
+        recording.InstantiateReplayObject(replayObjectPrefab, replayObjects);
         // TODO - change the camera object to the replay object
         // Debug.Log("Starting replay...");
     }
