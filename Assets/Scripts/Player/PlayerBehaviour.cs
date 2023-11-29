@@ -45,9 +45,15 @@ public class PlayerBehaviour : MonoBehaviour
     [Header("Attacking")]
     public PlayerAttack playerAttack;
 
+    private Recorder recorder;
+
+    [Header("Temporary Features")]
+    public bool facingRight = false;
+    [SerializeField] private GameObject eyes;
 
     void Awake() {
         playerControls = new PlayerControls();
+        recorder = GetComponent<Recorder>();
     }
 
     void OnEnable() {
@@ -82,12 +88,44 @@ public class PlayerBehaviour : MonoBehaviour
     {
         // handoff update to current state
         currentState.UpdateState(this);
+        if (move.ReadValue<Vector2>() != Vector2.zero)
+        {
+            bool currentFacingRight = facingRight;
+            facingRight = move.ReadValue<Vector2>().x > 0;
+            if (currentFacingRight != facingRight) HandleFacing(); 
+        }
     }
 
-        void FixedUpdate() 
+    void FixedUpdate() 
     {
         // handoff fixedupdate to current state
         currentState.FixedUpdateState(this);
+    }
+
+    // for recording, runs after all update methods are completed
+    private void LateUpdate()
+    {
+        // record replay data for this frame
+        ReplayData data = new PlayerReplayData(this.transform.position, facingRight);
+        recorder.RecordReplayFrame(data);
+    }
+
+    // temporary facing handle script
+    private void HandleFacing()
+    {
+        Vector3 eyePosition = eyes.transform.localPosition;
+        eyePosition.z = 0;
+        eyePosition.y = 0.57f;
+
+        if (facingRight)
+        {
+            eyePosition.x = 0.23f;
+        }
+        else
+        {
+            eyePosition.x = -0.23f;
+        }
+        eyes.transform.localPosition = eyePosition;
     }
 
     // handle state switching
