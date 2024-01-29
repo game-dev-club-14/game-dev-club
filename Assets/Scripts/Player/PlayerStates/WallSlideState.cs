@@ -7,20 +7,26 @@ public class WallSlideState : PlayerBaseState
 {
     public override void EnterState(PlayerBehaviour playerBehaviour) {
         playerBehaviour.jumpsRemaining = playerBehaviour.maxJumps;
-        playerBehaviour.moveDirection.y = -playerBehaviour.slideSpeed;
+        float gameSpeed = GameManager.current.inGameTimeScale;
+        playerBehaviour.momentum.y = -playerBehaviour.slideSpeed * 
+            playerBehaviour.gravity * playerBehaviour.fallSpeedMultiplier * Time.fixedDeltaTime; // adjusting slide speed as a proportion of regular falling speed
+        playerBehaviour.moveDirection.y = playerBehaviour.momentum.y * gameSpeed;
         Debug.Log("WALL SLIDING");
     }
 
     public override void UpdateState(PlayerBehaviour playerBehaviour) {
-        if (playerBehaviour.jump.triggered) {
+        if (playerBehaviour.IsNewJumpInitiated())
+        {
             playerBehaviour.SwitchState(playerBehaviour.WallJumpState);
         }
     }
 
     public override void FixedUpdateState(PlayerBehaviour playerBehaviour) {
-        Vector2 moveVec = playerBehaviour.move.ReadValue<Vector2>();
+        Vector2 moveVec = playerBehaviour.GetCurrentMovementInput();
+        float gameSpeed = GameManager.current.inGameTimeScale;
 
-        playerBehaviour.moveDirection.x = Math.Sign(moveVec.x) * playerBehaviour.moveSpeed;
+        playerBehaviour.momentum.x = Mathf.Sign(moveVec.x) * playerBehaviour.moveSpeed * 0.02f; // player "sticks" to wall to make it harder to get off by accident
+        playerBehaviour.moveDirection.x = playerBehaviour.momentum.x * gameSpeed;
 
         playerBehaviour.rb.MovePosition(playerBehaviour.rb.position + playerBehaviour.moveDirection * Time.fixedDeltaTime);
     }

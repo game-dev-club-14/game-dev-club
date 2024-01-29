@@ -5,7 +5,8 @@ using UnityEngine;
 public class IdleState : PlayerBaseState
 {
     public override void EnterState(PlayerBehaviour playerBehaviour) {
-        playerBehaviour.moveDirection.y = 0;
+        playerBehaviour.moveDirection = Vector2.zero;
+        playerBehaviour.momentum = Vector2.zero;
         playerBehaviour.jumpsRemaining = playerBehaviour.maxJumps;
         // debugging
         // playerBehaviour.rend.material.color = Color.white;
@@ -13,13 +14,16 @@ public class IdleState : PlayerBaseState
     }
 
     public override void UpdateState(PlayerBehaviour playerBehaviour) {
+        Vector2 movementInput = playerBehaviour.GetCurrentMovementInput();
         // switch to attack
-        // switch to run
-        if (playerBehaviour.move.ReadValue<Vector2>() != Vector2.zero) {
+        // Switch to run
+        if (movementInput != Vector2.zero)
+        {
             playerBehaviour.SwitchState(playerBehaviour.RunState);
         }
-        // switch to jump
-        if (playerBehaviour.jump.triggered) {
+        // Switch to jump
+        if (playerBehaviour.IsNewJumpInitiated())
+        {
             playerBehaviour.SwitchState(playerBehaviour.JumpingState);
         }
     }

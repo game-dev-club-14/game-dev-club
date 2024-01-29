@@ -6,25 +6,51 @@ using UnityEngine;
 public class FallingState : PlayerBaseState
 {
     public override void EnterState(PlayerBehaviour playerBehaviour) {
-        playerBehaviour.moveDirection.y = 0;
+        // playerBehaviour.moveDirection.y = 0;
+        // instead, apply falling speed multiplier * gravity to the object!
+
         playerBehaviour.jumpsRemaining--;
         // debugging
         // playerBehaviour.rend.material.color = Color.yellow;
         Debug.Log("FALLING");
     }
 
-    public override void UpdateState(PlayerBehaviour playerBehaviour) {
-        if (playerBehaviour.jump.triggered && (playerBehaviour.jumpsRemaining > 0)) {
+    public override void UpdateState(PlayerBehaviour playerBehaviour)
+    {
+        if (playerBehaviour.IsNewJumpInitiated() && playerBehaviour.jumpsRemaining > 0)
+        {
             playerBehaviour.SwitchState(playerBehaviour.JumpingState);
         }
     }
 
-    public override void FixedUpdateState(PlayerBehaviour playerBehaviour) {
-        Vector2 moveVec = playerBehaviour.move.ReadValue<Vector2>();
+    public override void FixedUpdateState(PlayerBehaviour playerBehaviour)
+    {
+        Vector2 moveVec = playerBehaviour.GetCurrentMovementInput();
+        float gameSpeed = GameManager.current.inGameTimeScale;
 
-        playerBehaviour.moveDirection.y = Math.Max(-playerBehaviour.maxFallSpeed, playerBehaviour.moveDirection.y - playerBehaviour.gravity);
-        playerBehaviour.moveDirection.x = Math.Sign(moveVec.x) * playerBehaviour.moveSpeed;
+        playerBehaviour.momentum.y = Math.Max(-playerBehaviour.maxFallSpeed, 
+            playerBehaviour.momentum.y - (playerBehaviour.gravity * Time.fixedDeltaTime 
+            * playerBehaviour.fallSpeedMultiplier * gameSpeed));
+        playerBehaviour.moveDirection.y = playerBehaviour.momentum.y * gameSpeed;
+        if (moveVec != Vector2.zero)
+        {
+            // playerBehaviour.moveDirection.x = ((playerBehaviour.horizontalAirTravel * (1 - playerBehaviour.airControl)) + 
+            //   (Mathf.Sign(moveVec.x) * playerBehaviour.airControl)) * playerBehaviour.moveSpeed * gameSpeed;
+            if (moveVec.x < 0)
+            {
+                playerBehaviour.momentum.x = Mathf.Max((playerBehaviour.moveSpeed * (-1.25f)),
+                    (playerBehaviour.momentum.x + (Mathf.Sign(moveVec.x) * playerBehaviour.airControl *
+                    playerBehaviour.moveSpeed * gameSpeed * Time.fixedDeltaTime))); // gradually adds x-momentum to player while capping at 1.25x movement speed
+            }
+            else if (moveVec.x > 0)
+            {
+                playerBehaviour.momentum.x = Mathf.Min((playerBehaviour.moveSpeed * 1.25f),
+                    (playerBehaviour.momentum.x + (Mathf.Sign(moveVec.x) * playerBehaviour.airControl *
+                    playerBehaviour.moveSpeed * gameSpeed * Time.fixedDeltaTime)));
+            }
+        }
 
+        playerBehaviour.moveDirection.x = playerBehaviour.momentum.x * gameSpeed;
         playerBehaviour.rb.MovePosition(playerBehaviour.rb.position + playerBehaviour.moveDirection * Time.fixedDeltaTime);
     }
 
@@ -42,7 +68,14 @@ public class FallingState : PlayerBaseState
             playerBehaviour.slideSide = -1;
             playerBehaviour.SwitchState(playerBehaviour.WallSlideState);
         } else if (collider.IsTouching(playerBehaviour.floorCollider)) {
-            playerBehaviour.SwitchState(playerBehaviour.IdleState);
+            if (playerBehaviour.momentum.x != 0)
+            {
+                playerBehaviour.SwitchState(playerBehaviour.RunState);
+            }
+            else
+            {
+                playerBehaviour.SwitchState(playerBehaviour.IdleState);
+            }
         }
     }
 
