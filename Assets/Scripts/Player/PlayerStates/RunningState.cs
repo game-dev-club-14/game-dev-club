@@ -11,19 +11,26 @@ public class RunningState : PlayerBaseState
     }
 
     public override void UpdateState(PlayerBehaviour playerBehaviour) {
-        if (playerBehaviour.jump.triggered) {
+        Vector2 movementInput = playerBehaviour.GetCurrentMovementInput();
+
+        if (playerBehaviour.IsNewJumpInitiated())
+        {
             playerBehaviour.SwitchState(playerBehaviour.JumpingState);
         }
-        if (playerBehaviour.move.ReadValue<Vector2>() == Vector2.zero) {
+        if (movementInput == Vector2.zero)
+        {
+            // playerBehaviour.momentum.x = 0; (make adjustments in case of wanting to gradually decrease speed)
             playerBehaviour.SwitchState(playerBehaviour.IdleState);
         }
     }
 
     public override void FixedUpdateState(PlayerBehaviour playerBehaviour) {
-        Vector2 moveVec = playerBehaviour.move.ReadValue<Vector2>();
-        if (moveVec != Vector2.zero) {
-            playerBehaviour.moveDirection.x = Mathf.Sign(moveVec.x) * playerBehaviour.moveSpeed;
-
+        Vector2 moveVec = playerBehaviour.GetCurrentMovementInput();
+        if (moveVec != Vector2.zero)
+        {
+            float gameSpeed = GameManager.current.inGameTimeScale;
+            playerBehaviour.momentum.x = Mathf.Sign(moveVec.x) * playerBehaviour.moveSpeed;
+            playerBehaviour.moveDirection.x = playerBehaviour.momentum.x * gameSpeed;
             playerBehaviour.rb.MovePosition(playerBehaviour.rb.position + playerBehaviour.moveDirection * Time.fixedDeltaTime);
         }
     }
